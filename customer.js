@@ -33,8 +33,8 @@ function inventory(){
         }
         console.table(productsArr);
         console.log("\n==============================\n");
+        shop();
     })
-    shop();
 }
 
 function shop(){
@@ -52,31 +52,32 @@ function shop(){
     ]).then(function(answer){
         var selectedItem = parseInt(answer.product);
         var requestedAmount = parseInt(answer.numberBought);
-        
-        connection.query("SELECT * FROM products WHERE ?", {product: selectedItem}, function(err, res){
+
+        connection.query("SELECT * FROM products WHERE ?", {id: selectedItem}, function(err, res){
             if (err) throw err;
             if (res.length === 0 || res.length > 10){
                 console.log("Pick an item that actually exists.");
                 shop();
             }else{
-                if (requestedAmount <= product.stock_quantity){
+                var item = res[0]
+                if (requestedAmount <= item.stock_quantity){
                     console.log("Sure thing! Your order has been placed.");
 
-                    var changeStock = "UPDATE products SET stock_quantity = " + (product.stock_quantity - requestedAmount) + " WHERE id = " + selectedItem;
+                    var changeStock = "UPDATE products SET stock_quantity = " + (item.stock_quantity - requestedAmount) + " WHERE id = " + selectedItem;
 
                     connection.query(changeStock, function(err, res){
                         if (err) throw err;
-                        console.log("Your total is $" + product.price * requestedAmount);
+                        console.log(item.stock_quantity);
+                        console.log("Your total is $" + item.price * requestedAmount);
                         connection.end();
                     })
                 }else{
-                    console.log("We don't have that much of that product. I apologize.");
-                    shop();
+                    console.log("We don't have that much of that item. I apologize.");
+                    console.log("We only have " + item.stock_quantity + "of that item.");
                     connection.end();
                 }
             }
         })
     })
-    
 }
 
